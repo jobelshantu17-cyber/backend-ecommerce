@@ -23,16 +23,16 @@ const adminUserRoutes = require("./routes/adminUserRoutes");
 const app = express();
 
 // --------------------------------------------------
-// ⭐ TRUST PROXY — REQUIRED ON RENDER
+// ⭐ REQUIRED FOR HTTPS COOKIE ON RENDER
 // --------------------------------------------------
 app.set("trust proxy", 1);
 
 // --------------------------------------------------
-// ⭐ FIXED CORS — FINAL WORKING VERSION
+// ⭐ CORS — FINAL VERSION (WORKS FOR RENDER + VERCEL)
 // --------------------------------------------------
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://walkmateofficial.vercel.app",   // YOUR MAIN DOMAIN
+  "https://walkmateofficial.vercel.app",
   "https://shoe-store-frontend-blue-ten.vercel.app"
 ];
 
@@ -46,7 +46,7 @@ app.use((req, res, next) => {
 
   res.setHeader("Access-Control-Allow-Credentials", "true");
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
   if (req.method === "OPTIONS") return res.sendStatus(200);
 
@@ -54,13 +54,13 @@ app.use((req, res, next) => {
 });
 
 // --------------------------------------------------
-// BODY PARSERS
+// ⭐ BODY PARSERS
 // --------------------------------------------------
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // --------------------------------------------------
-// ⭐ EXPRESS SESSION — FIXED FOR HTTPS + RENDER
+// ⭐ SESSION CONFIG — REQUIRED FOR LOGIN TO WORK
 // --------------------------------------------------
 app.use(
   session({
@@ -68,9 +68,9 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: true,         // REQUIRED for HTTPS
+      secure: true,         // HTTPS required
       httpOnly: true,
-      sameSite: "none"      // REQUIRED for cross-site cookies
+      sameSite: "none"      // Cross-site cookies allowed
     },
     store: MongoStore.create({
       mongoUrl: process.env.MONGO_URI,
@@ -79,24 +79,33 @@ app.use(
   })
 );
 
-// Static
+// --------------------------------------------------
+// STATIC UPLOADS
+// --------------------------------------------------
 app.use("/uploads", express.static("uploads"));
 
-// Routes
+// --------------------------------------------------
+// ROUTES
+// --------------------------------------------------
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);
+
 app.use("/api/admin", adminRoutes);
 app.use("/api/admin", adminOrderRoutes);
 app.use("/api/admin", adminUserRoutes);
 
-// Test
+// --------------------------------------------------
+// TEST ROUTE
+// --------------------------------------------------
 app.get("/", (req, res) => {
   res.send("Backend is running on Render!");
 });
 
-// Start
+// --------------------------------------------------
+// START SERVER
+// --------------------------------------------------
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
