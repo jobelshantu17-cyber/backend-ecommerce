@@ -26,9 +26,17 @@ const app = express();
 // --------------------------------------------------
 const allowedOrigins = [
   "http://localhost:5173",
+
+  // Production domain
   "https://shoe-store-i9ykpou0y-jobelshantu17-gmailcoms-projects.vercel.app",
-  "https://shoe-store-gn3x7yu6j-jobelshantu17-gmailcoms-projects.vercel.app"
+
+  // Old preview deployment
+  "https://shoe-store-gn3x7yu6j-jobelshantu17-gmailcoms-projects.vercel.app",
+
+  // NEW preview deployment (this is the one hitting backend)
+  "https://shoe-store-pldbf37dh-jobelshantu17-gmailcoms-projects.vercel.app"
 ];
+
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;
