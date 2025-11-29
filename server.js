@@ -22,12 +22,18 @@ const adminUserRoutes = require("./routes/adminUserRoutes");
 
 const app = express();
 
-// --------------------------------------------
-// ⭐ CORRECT CORS — FINAL FIX
-// --------------------------------------------
+// --------------------------------------------------
+// ⭐ TRUST PROXY — REQUIRED ON RENDER
+// --------------------------------------------------
+app.set("trust proxy", 1);
+
+// --------------------------------------------------
+// ⭐ FIXED CORS — FINAL WORKING VERSION
+// --------------------------------------------------
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://shoe-store-frontend-a25dtlvrf-jobelshantu17-gmailcoms-projects.vercel.app"
+  "https://walkmateofficial.vercel.app",   // YOUR MAIN DOMAIN
+  "https://shoe-store-frontend-blue-ten.vercel.app"
 ];
 
 app.use((req, res, next) => {
@@ -40,36 +46,31 @@ app.use((req, res, next) => {
 
   res.setHeader("Access-Control-Allow-Credentials", "true");
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  if (req.method === "OPTIONS") {
-    return res.sendStatus(200);
-  }
+  if (req.method === "OPTIONS") return res.sendStatus(200);
 
   next();
 });
 
-// ❌ Remove this completely (you had this earlier)
-// app.use(cors());
-
-// --------------------------------------------
-// Body parsers
-// --------------------------------------------
+// --------------------------------------------------
+// BODY PARSERS
+// --------------------------------------------------
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// --------------------------------------------
-// Sessions
-// --------------------------------------------
+// --------------------------------------------------
+// ⭐ EXPRESS SESSION — FIXED FOR HTTPS + RENDER
+// --------------------------------------------------
 app.use(
   session({
     secret: process.env.SESSION_SECRET || "mysecretkey",
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: false,
+      secure: true,         // REQUIRED for HTTPS
       httpOnly: true,
-      sameSite: "lax"
+      sameSite: "none"      // REQUIRED for cross-site cookies
     },
     store: MongoStore.create({
       mongoUrl: process.env.MONGO_URI,
