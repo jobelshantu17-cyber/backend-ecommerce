@@ -1,10 +1,9 @@
 const express = require('express');
 const session = require('express-session');
 const dotenv = require('dotenv');
-const cors = require("cors");
 const MongoStore = require('connect-mongo');
 
-// Load environment variables
+// Load env
 dotenv.config();
 
 // Connect DB
@@ -23,7 +22,7 @@ const adminUserRoutes = require('./routes/adminUserRoutes');
 const app = express();
 
 // --------------------------------------------------
-// CORS (REQUIRED FOR RENDER + VERCEL)
+// ⭐ FIXED CORS FOR EXPRESS v5 + RENDER + VERCEL
 // --------------------------------------------------
 const allowedOrigins = [
   "http://localhost:5173",
@@ -31,29 +30,33 @@ const allowedOrigins = [
   "https://shoe-store-gn3x7yu6j-jobelshantu17-gmailcoms-projects.vercel.app"
 ];
 
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      console.log("Incoming Origin:", origin);        // 🔥 SHOWS WHICH ORIGIN IS CALLING
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        console.log("❌ BLOCKED BY CORS:", origin);   // ❌ SHOWS WHAT IS BLOCKED
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true,
-  })
-);
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  console.log("Incoming Origin:", origin);
 
-app.options("*", cors());
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
 
-// Body Parsers
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200); // PREVENTS CORS CRASH
+  }
+
+  next();
+});
+
+// --------------------------------------------------
+// BODY PARSERS
+// --------------------------------------------------
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // --------------------------------------------------
-// EXPRESS SESSION + MONGO STORE (PRODUCTION SAFE)
+// SESSION + MONGO STORE
 // --------------------------------------------------
 app.use(
   session({
@@ -61,7 +64,7 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: false, // change to true if you use HTTPS + proxy
+      secure: false, 
       httpOnly: true,
       sameSite: "lax",
     },
@@ -72,11 +75,11 @@ app.use(
   })
 );
 
-// Static files
+// Static uploads
 app.use("/uploads", express.static("uploads"));
 
 // --------------------------------------------------
-// API ROUTES
+// ROUTES
 // --------------------------------------------------
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
@@ -84,17 +87,18 @@ app.use("/api/categories", categoryRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);
 
-// Admin routes
 app.use("/api/admin", adminRoutes);
 app.use("/api/admin", adminOrderRoutes);
 app.use("/api/admin", adminUserRoutes);
 
-// Test route
+// Test endpoint
 app.get("/", (req, res) => {
   res.send("Backend is running on Render!");
 });
 
-// Server
+// --------------------------------------------------
+// START SERVER
+// --------------------------------------------------
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () =>
   console.log(`🚀 Server running on port ${PORT}`)
