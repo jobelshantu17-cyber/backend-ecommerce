@@ -2,6 +2,7 @@ const express = require("express");
 const session = require("express-session");
 const dotenv = require("dotenv");
 const MongoStore = require("connect-mongo");
+const mongoose = require("mongoose");
 
 // Load env
 dotenv.config();
@@ -68,9 +69,9 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: true,         // HTTPS required
+      secure: true, // HTTPS required
       httpOnly: true,
-      sameSite: "none"      // Cross-site cookies allowed
+      sameSite: "none" // Cross-site cookies allowed
     },
     store: MongoStore.create({
       mongoUrl: process.env.MONGO_URI,
@@ -102,6 +103,25 @@ app.use("/api/admin", adminUserRoutes);
 // --------------------------------------------------
 app.get("/", (req, res) => {
   res.send("Backend is running on Render!");
+});
+
+// --------------------------------------------------
+// ⭐ DEBUG ROUTE — CHECK ACTUAL DATA FROM MONGODB
+// --------------------------------------------------
+app.get("/debug", async (req, res) => {
+  try {
+    const docs = await mongoose.connection.db
+      .collection("products")
+      .find({})
+      .toArray();
+
+    res.json({
+      count: docs.length,
+      data: docs
+    });
+  } catch (err) {
+    res.json({ error: err.message });
+  }
 });
 
 // --------------------------------------------------
