@@ -15,7 +15,7 @@ const productSchema = new mongoose.Schema({
 
   sizes: {
     type: [sizeSchema],
-    required: true,
+    required: false,   // ✔ FIXED — make sizes optional
     default: []
   },
 
@@ -36,5 +36,4 @@ const productSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
-// ⭐ IMPORTANT: Tell Mongoose to use "products" collection
 module.exports = mongoose.model('Product', productSchema, 'products');
